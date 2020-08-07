@@ -4,7 +4,9 @@
 This project has been performed 2D object detection by Retinanet << Focal Loss for Dense Object Detection >> and 3D objects detection by 3DDeepbox << 3D Bounding Box Estimation Using Deep Learning and Geometry >>. 
 Above both of sub-projects base on the lightweight backbone MobileNet-v2. of course, Replacing it with other base net conveniently, such as MobileNet-v3 and ShuffleNet-v2 etc.
 
-<img src="https://pan.baidu.com/disk/home#/all?path=%2F&vmode=list" width="50%">
+![DEMO SHOW]("https://github.com/hitfee01/3DDeepBoxRetina2D/blob/master/images/detect_result.png")
+
+if image fail to shows above, you can see it in images.  
 
 ## Quick Start
 ### datasets

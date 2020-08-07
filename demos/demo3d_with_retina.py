@@ -70,7 +70,8 @@ class Demo3D_with_Retina(object):
             if (k & 0xff == ord('q')):
                 break
             cv2.imshow('DETECTOR RESULT', numpy_vertical)
-            # cv2.imwrite('./demos/detect_result.png', numpy_vertical)
+            # numpy_vertical = cv2.resize(numpy_vertical, (numpy_vertical.shape[1]//4, numpy_vertical.shape[0]//4))
+            # cv2.imwrite('./demos/detect_result.jpeg', numpy_vertical)
 
     def detect_objects_from_video(self, path, label_map=None):
         cap = cv2.VideoCapture(path)
