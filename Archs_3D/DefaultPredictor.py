@@ -72,7 +72,7 @@ class DefaultPredictor:
                                                      theta_rays[i].cpu().numpy(),
                                                      dimension[i].cpu().numpy(),
                                                      bboxes[i].cpu().numpy(),
-                                                     self.proj_matrix)
+                                                     self.proj_matrix.cpu().numpy())
                 locations.append(location)
                 orients.append(alpha[i].cpu().numpy() + theta_rays[i].cpu().numpy())
                 dimensions.append(dimension[i].cpu().numpy())

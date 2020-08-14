@@ -54,6 +54,7 @@ class DefaultPredictor:
             height, width, _ = original_image.shape
             image = self.transform(original_image)
             inputs = torch.stack([image], dim=0)
+            inputs = inputs.to(self.device)
             predictions = self.model(inputs)
             processed_predictions = []
             for predictions_per_image in predictions:

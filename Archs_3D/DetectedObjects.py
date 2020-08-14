@@ -20,7 +20,7 @@ class DetectedObject(object):
         fovx = 2 * torch.atan(width / (2 * proj_matrix[0][0]))
         center = (bboxes[:, 0] + bboxes[:, 2]) / 2
         dx = center - (width / 2)
-        mult = torch.ones(dx.size(), dtype=torch.float32)
+        mult = torch.ones(dx.size(), dtype=torch.float32, device=dx.device)
         mult = torch.where(dx >= 0, mult, -1.*mult)
         dx = torch.abs(dx)
         angle = torch.atan( (2*dx*torch.tan(fovx/2)) / width )

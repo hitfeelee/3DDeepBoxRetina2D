@@ -12,6 +12,7 @@ class cv_colors(Enum):
     ORANGE = (44,162,247)
     MINT = (239,255,66)
     YELLOW = (2,255,250)
+    DINGXIANG = (204, 164, 227)
 
 def getColorMap():
     colormap = [[255, 255, 255]]
@@ -46,9 +47,9 @@ def draw_bboxes_to_image(image, bboxes, classes, label_map=None):
     return image
 
 def draw_instance_to_image(image, instance, label_map=None):
-    bboxes = instance.get('pred_boxes').tensor.numpy()
-    scores = instance.get('scores').numpy()
-    pred_classes = instance.get('pred_classes').numpy()
+    bboxes = instance.get('pred_boxes').tensor.cpu().numpy()
+    scores = instance.get('scores').cpu().numpy()
+    pred_classes = instance.get('pred_classes').cpu().numpy()
     num = bboxes.shape[0]
     scale = 0.5
     offset = int(12 * scale)

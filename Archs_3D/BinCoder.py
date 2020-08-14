@@ -32,7 +32,7 @@ class BinCoder(object):
 
     def decode(self, pred_orient, pred_conf, pred_dim, pred_class):
         batch_size = list(pred_class.size())[0]
-        dim_means = self.dim_mean[pred_class]
+        dim_means = self.dim_mean[pred_class].to(pred_dim.device)
         Dimension = pred_dim + dim_means
 
         argmax = torch.argmax(pred_conf, dim=1)
