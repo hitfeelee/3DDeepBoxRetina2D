@@ -56,7 +56,7 @@ class DefaultPredictor:
                 original_image = original_image[:, :, ::-1]
             height, width, _ = original_image.shape
             objects = DetectedObject(original_image, classes, bboxes, self.proj_matrix,
-                                     input_size=self.cfg.INTENSOR_SHAPE)
+                                     input_size=self.cfg.INTENSOR_SIZE)
             inputs = objects.croped_imgs.to(self.device)
             classes = objects.classes.to(self.device)
             theta_rays = objects.theta_rays.to(self.device)

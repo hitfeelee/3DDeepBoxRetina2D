@@ -17,7 +17,7 @@ class DetectedObject(object):
         if not torch.is_tensor(box_2d):
             bboxes = torch.from_numpy(box_2d)
         width = img.shape[1]
-        fovx = 2 * torch.atan(width / (2 * proj_matrix[0][0]))
+        fovx = 2 * torch.atan(width / (2 * proj_matrix[0][0])).to(bboxes.device)
         center = (bboxes[:, 0] + bboxes[:, 2]) / 2
         dx = center - (width / 2)
         mult = torch.ones(dx.size(), dtype=torch.float32, device=dx.device)

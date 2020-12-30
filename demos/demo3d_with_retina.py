@@ -12,6 +12,7 @@ from datasets.KittiDatasets import KittiDatasets
 from datasets.KittiDataset3D import KittiDataset3D
 import time
 import argparse
+from preprocess.transforms import ToAbsoluteCoords
 
 def arg_parser():
     parser = argparse.ArgumentParser(description="Retina-Deepbox3D Demo")
@@ -33,6 +34,7 @@ class Demo3D_with_Retina(object):
         self.kitti2D = KittiDatasets(os.path.join(retina_cfg.DATASET.PATH, 'training'))
         self.kitti3D = KittiDataset3D(os.path.join(retina_cfg.DATASET.PATH, 'training'))
         self.retina_cfg = retina_cfg
+        self.to_abs_coord = ToAbsoluteCoords()
 
     def run(self):
         #=====test images kitti dataset========#
@@ -51,20 +53,20 @@ class Demo3D_with_Retina(object):
             src3d = np.copy(img)
             start_time = time.time()
             outputs = self.predictor2D(img)
-            instance = outputs[0]['instances']
-            if len(instance) <= 0:
-                cv2.waitKey(100)
-                continue
-            bboxes = instance.get('pred_boxes').tensor
-            classes = instance.get('pred_classes')
-            locations, orients, dimensions = self.predictor3D(src3d, bboxes, classes)
-            end_time = time.time()
+            classes = outputs.get_field('class')
+            num = classes.size(0)
+            if num > 0:
+                src2d, outputs = self.to_abs_coord(src2d, targets=outputs)
+                bboxes = outputs.get_field('bbox')
+                locations, orients, dimensions = self.predictor3D(src3d, bboxes, classes)
+                end_time = time.time()
 
-            print('detecting time %s per image' % (end_time - start_time))
-            draw_instance_to_image(src2d, instance, label_map=label_map)
-            for loc, orient, dim in zip(locations, orients, dimensions):
-                plot_3d_box(src3d, self.predictor3D.proj_matrix.cpu().numpy(),
-                            orient, dim, loc)
+                print('detecting time %s per image' % (end_time - start_time))
+                cv_draw_bboxes_2d(src2d, outputs, label_map=label_map)
+                clses = classes.cpu().numpy()
+                for cls, loc, orient, dim in zip(clses, locations, orients, dimensions):
+                    cv_draw_bbox_3d(src3d, self.predictor3D.proj_matrix.cpu().numpy(),
+                                orient, dim, loc, cls, 1., KITTI_COLOR_MAP[cls])
             numpy_vertical = np.concatenate((src2d, src3d), axis=0)
             k = cv2.waitKey(3000)
             if (k & 0xff == ord('q')):
@@ -89,20 +91,20 @@ class Demo3D_with_Retina(object):
                 src3d = np.copy(frame)
                 start_time = time.time()
                 outputs = self.predictor2D(frame)
-                instance = outputs[0]['instances']
-                if len(instance) <= 0:
-                    cv2.waitKey(100)
-                    continue
-                bboxes = instance.get('pred_boxes').tensor
-                classes = instance.get('pred_classes')
-                locations, orients, dimensions = self.predictor3D(src3d, bboxes, classes)
-                end_time = time.time()
+                classes = outputs.get_field('class')
+                num = classes.size(0)
+                if num > 0:
+                    src2d, outputs = self.to_abs_coord(src2d, targets=outputs)
+                    bboxes = outputs.get_field('bbox')
+                    locations, orients, dimensions = self.predictor3D(src3d, bboxes, classes)
+                    end_time = time.time()
 
-                print('detecting time %s per image' % (end_time - start_time))
-                draw_instance_to_image(src2d, instance, label_map=label_map)
-                for loc, orient, dim in zip(locations, orients, dimensions):
-                    plot_3d_box(src3d, self.predictor3D.proj_matrix.cpu().numpy(),
-                                orient, dim, loc)
+                    print('detecting time %s per image' % (end_time - start_time))
+                    cv_draw_bboxes_2d(src2d, outputs, label_map=label_map)
+                    clses = classes.cpu().numpy()
+                    for cls, loc, orient, dim in zip(clses, locations, orients, dimensions):
+                        cv_draw_bbox_3d(src3d, self.predictor3D.proj_matrix.cpu().numpy(),
+                                        orient, dim, loc, cls, 1., KITTI_COLOR_MAP[cls])
                 numpy_vertical = np.concatenate((src2d, src3d), axis=0)
                 k = cv2.waitKey(1000)
                 if (k & 0xff == ord('q')):
@@ -113,6 +115,7 @@ class Demo3D_with_Retina(object):
         cv2.destroyAllWindows()
 
 if __name__ == '__main__':
+    os.environ["CUDA_VISIBLE_DEVICES"] = "3"
     args = arg_parser().parse_args()
     demo = Demo3D_with_Retina(args.model_name_2D, args.model_name_3D, type=args.type)
     demo.run()

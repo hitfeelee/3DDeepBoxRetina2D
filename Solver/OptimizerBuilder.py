@@ -11,8 +11,11 @@ def build_optimizer(cfg, model: torch.nn.Module) -> torch.optim.Optimizer:
     Build an optimizer from config.
     """
     params = []
+    exclude_scopes = cfg.SOLVER.EXCLUDE_SCOPE
     for key, value in model.named_parameters():
         if not value.requires_grad:
+            continue
+        if any(key.startswith(scope) for scope in exclude_scopes):
             continue
         lr = cfg.SOLVER.BASE_LR
         weight_decay = cfg.SOLVER.WEIGHT_DECAY
@@ -25,10 +28,11 @@ def build_optimizer(cfg, model: torch.nn.Module) -> torch.optim.Optimizer:
             # weights.
             lr = cfg.SOLVER.BASE_LR * cfg.SOLVER.BIAS_LR_FACTOR
             weight_decay = cfg.SOLVER.WEIGHT_DECAY_BIAS
+        print(key)
         params += [{"params": [value], "lr": lr, "weight_decay": weight_decay}]
 
     optimizer = torch.optim.SGD(params, lr, momentum=cfg.SOLVER.MOMENTUM)
-    # optimizer = torch.optim.Adamx(params, lr, weight_decay=1.e-4)
+    # optimizer = torch.optim.Adamax(params, lr=lr, weight_decay=1.e-4)
     return optimizer
 
 

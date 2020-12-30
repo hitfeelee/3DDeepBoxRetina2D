@@ -4,4 +4,6 @@
 /pretrained/
 .idea
 *.py[cod]
+/logdirs
+/weights
 

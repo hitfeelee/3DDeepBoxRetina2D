@@ -11,7 +11,7 @@ class BBoxCoder(object):
         self.num_classes = configs.RETINANET.NUM_CLASSES
         self.od_feature_shape = od_feature_shape
         self.anchor_gener = AnchorGenerator(configs, od_feature_shape)
-        self.anchors = self.anchor_gener(configs.INTENSOR_SHAPE)
+        self.anchors = self.anchor_gener(configs.INTENSOR_SIZE)
         self.box2box_transform = Box2BoxTransform(weights=configs.RPN.BBOX_REG_WEIGHTS)
         self.matcher = Matcher(
             configs.RETINANET.IOU_THRESHOLDS,

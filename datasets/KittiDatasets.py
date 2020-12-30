@@ -5,7 +5,7 @@ import operator
 from torch.utils import data
 from collections import OrderedDict
 from preprocess.data_preprocess import TrainAugmentation
-from postprocess.visualization import draw_bboxes_to_image
+from postprocess.visualization import cv_draw_bboxes_2d
 from datasets.dataset_utils import AspectRatioGroupedDataset
 from datasets.dataset_utils import Label
 from datasets.distributed_sampler import *
@@ -84,6 +84,6 @@ if __name__ == '__main__':
         image = image.permute(1,2,0).numpy().astype(np.uint8)
         bboxes = d[0]['labels'].gt_bboxes.tensor.numpy()
         classes = d[0]['labels'].gt_classes
-        img = draw_bboxes_to_image(image, bboxes, classes, dataset.class_list)
-        cv2.imshow("preprocessed image", img)
+        # cv_draw_bboxes_2d(image, bboxes, classes, dataset.class_list)
+        cv2.imshow("preprocessed image", image)
         cv2.waitKey(3000)

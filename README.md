@@ -60,11 +60,14 @@ Please place it as following:
 
     python3 ./demos/demo3d_with_retina.py --model-name-2D MOBI-V2-RETINA-FPN --model-name-3D MOBI-V2-DEEPBOX3D
 
+3D detection demo with Retina3D detection.
+
+    python3 ./demos/demo_retina3d.py --model-name MOBI-V2-RETINA3D-FPN
+    
 ## Pretrained Model
 
-We provide a set of trained models available for download in the  [Pretrained Model](https://pan.baidu.com/s/1_24GPCHlaU8JnzVMemBGDg).
-提取码: dr9i
-
+We provide a set of trained models available for download in the  [Pretrained Model](https://pan.baidu.com/s/1KkVe2mzwp1yiL9HfjomLYQ).
+提取码: uiyh
 ## License
 
 

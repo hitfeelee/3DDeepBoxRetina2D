@@ -33,15 +33,19 @@ class BinCoder(object):
     def decode(self, pred_orient, pred_conf, pred_dim, pred_class):
         batch_size = list(pred_class.size())[0]
         dim_means = self.dim_mean[pred_class].to(pred_dim.device)
-        Dimension = pred_dim + dim_means
+        dimension = pred_dim + dim_means
 
         argmax = torch.argmax(pred_conf, dim=1)
         indexs = torch.tensor(range(batch_size), dtype=torch.long, device=pred_orient.device)
         orient = pred_orient[indexs, argmax]
-        Alpha = torch.atan2(orient[:, 1], orient[:, 0])
-        Alpha += self.multibin.get_bin_bench_angle(argmax)
-        Alpha -= np.pi
-        return Alpha, Dimension
+        alpha = torch.atan2(orient[:, 1], orient[:, 0])
+        alpha += self.multibin.get_bin_bench_angle(argmax)
+        alpha -= np.pi
+        i_pos = alpha > np.pi
+        i_neg = alpha < -np.pi
+        alpha[i_pos] -= 2*np.pi
+        alpha[i_neg] += 2*np.pi
+        return alpha, dimension
 
 
 

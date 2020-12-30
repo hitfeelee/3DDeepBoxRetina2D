@@ -90,9 +90,9 @@ def run(model_name):
                 logging.info('Starting training....')
         if latest_model is not None:
             checkpoint = torch.load(os.path.join(model_path, latest_model), map_location=torch.device(device))
-            model.load_state_dict(checkpoint['model_state_dict'])
+            model.load_state_dict(checkpoint['model'])
             if CONFIGS.TRAINING.CHECKPOINT_MODE == 'RESUME':
-                solver.load_state_dict(checkpoint['solver_state_dict'], device)
+                solver.load_state_dict(checkpoint['solver'], device)
                 first_step = checkpoint['step']
                 total_loss_debug_steps = checkpoint['total_loss_debug_steps']
                 total_time_debug_steps = checkpoint['total_time_debug_steps']
@@ -156,8 +156,8 @@ def run(model_name):
                 'step': step,
                 'total_loss_debug_steps': total_loss_debug_steps,
                 'total_time_debug_steps':total_time_debug_steps,
-                'model_state_dict': model.state_dict(),
-                'solver_state_dict': solver.state_dict()
+                'model': model.state_dict(),
+                'solver': solver.state_dict()
             }, name)
             logging.info("====================")
             precision = float(t_tp) / max(1, (t_tp + t_fp))

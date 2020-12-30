@@ -32,13 +32,13 @@ def train(model, solver, b_images, gt_orient, gt_conf, gt_dim):
 
 def run(model_name):
     os.environ["CUDA_VISIBLE_DEVICES"] = "1"
-    logging.info('Cuda available: ', torch.cuda.is_available())
+    logging.info('Cuda available: ', 'True' if torch.cuda.is_available() else 'False')
     model, backbone, CONFIGS = build_model(model_name)
     dataset_path = CONFIGS.DATASET.PATH
     train_path = CONFIGS.TRAINING.LOGDIR
     device = torch.device(CONFIGS.DEVICE if torch.cuda.is_available() else "cpu")
     dataset = KittiDataset3D(dataset_path,
-                             transform=TrainAugmentation(CONFIGS.INTENSOR_SHAPE))
+                             transform=TrainAugmentation(CONFIGS.INTENSOR_SIZE))
     num = len(dataset)
     sampler = TrainingSampler(len(dataset))
 
@@ -51,6 +51,7 @@ def run(model_name):
     generator = AspectRatioGroupedDataset(generator, CONFIGS.BATCH_SIZE)
 
     model.train()
+    model = model.to(device)
     solver = Solver(model, CONFIGS)
     first_step = 0
     total_loss_debug_steps = 0.
@@ -80,7 +81,7 @@ def run(model_name):
             checkpoint = torch.load(os.path.join(model_path, latest_model), map_location=torch.device(device))
             model.load_state_dict(checkpoint['model_state_dict'])
             if CONFIGS.TRAINING.CHECKPOINT_MODE == 'RESUME':
-                solver.load_state_dict(checkpoint['solver_state_dict'], device)
+                solver.load_state_dict(checkpoint['solver_state_dict'])
                 first_step = checkpoint['step']
                 total_loss_debug_steps = checkpoint['total_loss_debug_steps']
                 total_time_debug_steps = checkpoint['total_time_debug_steps']
@@ -89,7 +90,7 @@ def run(model_name):
             else:
                 logging.info('Starting training....')
                 pass
-    model = model.to(device)
+
     debug_steps = 10.
     max_steps = CONFIGS.SOLVER.MAX_ITER
     generator = iter(generator)

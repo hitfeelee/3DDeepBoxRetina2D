@@ -2,7 +2,7 @@
 import torch
 import os
 from preprocess.data_preprocess import PredictionTransform
-from postprocess.postprocessing import *
+from utils.check_point import DetectronCheckpointer
 
 root_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 
@@ -31,10 +31,11 @@ class DefaultPredictor:
         self.model.eval()
         self.device = torch.device(self.cfg.DEVICE if torch.cuda.is_available() else "cpu")
         checkpoint_file = os.path.join(root_path, self.cfg.DETECTOR.CHECKPOINT)
-        checkpoint = torch.load(checkpoint_file, map_location=torch.device(self.device))
-        self.model.load_state_dict(checkpoint['model_state_dict'])
+        checkpointer = DetectronCheckpointer(cfg, model, save_dir=cfg.TRAINING.LOGDIR)
+        checkpointer.load(checkpoint_file)
+
         self.input_format = cfg.INPUT.FORMAT
-        self.transform = PredictionTransform(self.cfg.INTENSOR_SHAPE[0], self.cfg.DATASET.MEAN)
+        self.transform = PredictionTransform(self.cfg.INTENSOR_SIZE, self.cfg.DATASET.MEAN)
         assert self.input_format in ["RGB", "BGR"], self.input_format
         self.model.to(self.device)
 
@@ -52,12 +53,9 @@ class DefaultPredictor:
                 # whether the model expects BGR inputs or RGB
                 original_image = original_image[:, :, ::-1]
             height, width, _ = original_image.shape
-            image = self.transform(original_image)
-            inputs = torch.stack([image], dim=0)
+            inputs, _ = self.transform(original_image)
             inputs = inputs.to(self.device)
-            predictions = self.model(inputs)
-            processed_predictions = []
-            for predictions_per_image in predictions:
-                r = detector_postprocess(predictions_per_image, height, width)
-                processed_predictions.append({"instances": r})
-            return processed_predictions
+            inputs = inputs.unsqueeze(0)
+            result = self.model(inputs)[0]
+
+            return result

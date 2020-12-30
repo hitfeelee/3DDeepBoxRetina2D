@@ -2,7 +2,7 @@ from fvcore.common.config import CfgNode
 from Archs_2D import Register
 
 CONFIGS = CfgNode()
-CONFIGS.INTENSOR_SHAPE = (288, 288)
+CONFIGS.INTENSOR_SIZE = (288, 288)
 CONFIGS.BATCH_SIZE = 32
 CONFIGS.DEVICE = 'cuda'
 
@@ -42,7 +42,8 @@ CONFIGS.SOLVER.STEPS = (50000, 80000)
 CONFIGS.SOLVER.WARMUP_FACTOR = 1.0 / 1000
 CONFIGS.SOLVER.WARMUP_ITERS = 1000
 CONFIGS.SOLVER.WARMUP_METHOD = "linear"
-
+CONFIGS.SOLVER.EXCLUDE_SCOPE = ()
+CONFIGS.SOLVER.LOAD_SOLVER = True
 
 # Detectron v1 (and previous detection code) used a 2x higher LR and 0 WD for
 # biases. This is not useful (at least for recent models). You should avoid

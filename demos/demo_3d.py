@@ -33,7 +33,7 @@ class Demo3D(Process):
             self.detect_objects_from_images()
 
     def detect_objects_from_images(self):
-        path = os.path.join(self.cfg.DATASET.PATH, 'training')
+        path = os.path.join(self.cfg.DATASET.PATH)
         kitti = KittiDataset3D(path)
         for id in kitti.ids:
             img, label = kitti.get_object(id)
@@ -41,10 +41,13 @@ class Demo3D(Process):
             bboxes = [torch.from_numpy(d['Box_2D']) for d in label.values()]
             classes = torch.stack(classes, dim=0)
             bboxes = torch.stack(bboxes, dim=0)
+            start_time = time.time()
             locations, orients, dimensions = self.predictor(img, bboxes, classes)
-            for loc, orient, dim in zip(locations, orients, dimensions):
-                plot_3d_box(img, self.predictor.proj_matrix.cpu().numpy(),
-                            orient, dim, loc)
+            end_time = time.time()
+            print('detecting time %s per image' % (end_time - start_time))
+            for cls, loc, orient, dim in zip(classes, locations, orients, dimensions):
+                cv_draw_bbox_3d(img, self.predictor.proj_matrix.cpu().numpy(),
+                            orient, dim, loc,kitti.class_list[cls], 1., KITTI_COLOR_MAP[cls])
             cv2.imshow('3D DETECTOR RESULT', img)
             k = cv2.waitKey(2000)
             if (k & 0xff == ord('q')):

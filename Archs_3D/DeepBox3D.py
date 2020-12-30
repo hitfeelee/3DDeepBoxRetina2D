@@ -48,7 +48,7 @@ class DeepBox3DArch(BackBone):
         feature_shapes = self.OutShapeSpec
         header_in_channels = feature_shapes[list(feature_shapes.keys())[-1]].channels
         header_in_stride = feature_shapes[list(feature_shapes.keys())[-1]].stride
-        header_in_size = get_shapes_by_stride(configs.INTENSOR_SHAPE, header_in_stride)
+        header_in_size = get_shapes_by_stride(configs.INTENSOR_SIZE, header_in_stride)
         self.orientation, self.confidence , self.dimension = self._build_subnet_header(header_in_channels,
                                                                                        header_in_size,
                                                                                        configs.DEEPBOX3D.OUT_CHANNELS)

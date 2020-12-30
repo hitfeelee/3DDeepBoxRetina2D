@@ -85,9 +85,9 @@ def sem_seg_postprocess(result, img_size, output_height, output_width):
 
 # option to rotate and shift (for label info)
 def create_corners(dimension, location=None, R=None):
-    dx = dimension[2] / 2
-    dy = dimension[0] / 2
-    dz = dimension[1] / 2
+    dx = dimension[2] / 2 #L
+    dy = dimension[0] / 2 #H
+    dz = dimension[1] / 2 #W
 
     x_corners = []
     y_corners = []
@@ -155,9 +155,13 @@ def calc_regressed_bbox_3d(alpha, theta_ray, dimension, bboxes, proj_matrix):
     bottom_constraints = []
 
     # using a different coord system
-    dx = dimension[2] / 2
-    dy = dimension[0] / 2
-    dz = dimension[1] / 2
+    dx = dimension[2] / 2 # L
+    dy = dimension[0] / 2 # H
+    dz = dimension[1] / 2 # W
+
+    # dx = dimension[0] / 2 # L
+    # dy = dimension[1] / 2 # H
+    # dz = dimension[2] / 2 # W
 
     # below is very much based on trial and error
 

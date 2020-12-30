@@ -31,6 +31,9 @@ class Solver(nn.Module):
                     self._best_param_group_id = i
                     break
         pass
+    @property
+    def solver_name(self):
+        return type(self._optimizer).__name__ + '_' + type(self._scheduler).__name__
 
     @property
     def optimizer(self):
@@ -44,21 +47,30 @@ class Solver(nn.Module):
     def learnrate(self):
         return self._optimizer.param_groups[self._best_param_group_id]["lr"]
 
-    def load_state_dict(self, state_dict:dict, device:str='cpu'):
-        self._best_param_group_id = state_dict['best_param_group_id'] \
+    def load_state_dict(self, state_dict:dict):
+        self._best_param_group_id = state_dict.pop('best_param_group_id') \
             if 'best_param_group_id' in state_dict else self._best_param_group_id
         if 'optimizer' in state_dict:
-            state = state_dict['optimizer']
-            self._optimizer.load_state_dict(state)
-            for k, v in self._optimizer.state.items():  # key is Parameter, val is a dict {key='momentum_buffer':tensor(...)}
-                if 'momentum_buffer' not in v:
-                    continue
-                self._optimizer.state[k]['momentum_buffer'] = self._optimizer.state[k]['momentum_buffer'].to(device)
-        if 'scheduler' in state_dict:
-            state = state_dict['scheduler']
-            self._scheduler.last_epoch = state['last_epoch']
-            self._optimizer.step()
-            self._scheduler.step()
+            cp = state_dict.pop("optimizer")
+            self.optimizer.load_state_dict(cp)
+        if "scheduler" in state_dict:
+            cp = state_dict.pop("scheduler")
+            cp = {'{}'.format(k): cp[k] for k in cp if k in ['last_epoch']}
+            self.scheduler.load_state_dict(cp)
+            self.optimizer.step()
+            self.scheduler.step()
+        # if 'optimizer' in state_dict:
+        #     state = state_dict['optimizer']
+        #     self._optimizer.load_state_dict(state)
+        #     for k, v in self._optimizer.state.items():  # key is Parameter, val is a dict {key='momentum_buffer':tensor(...)}
+        #         if 'momentum_buffer' not in v:
+        #             continue
+        #         self._optimizer.state[k]['momentum_buffer'] = self._optimizer.state[k]['momentum_buffer'].to(device)
+        # if 'scheduler' in state_dict:
+        #     state = state_dict['scheduler']
+        #     self._scheduler.last_epoch = state['last_epoch']
+        #     self._optimizer.step()
+        #     self._scheduler.step()
 
     def state_dict(self):
         state = {
@@ -70,13 +82,13 @@ class Solver(nn.Module):
         }
         return state
     
-    def step(self, losses):
+    def step(self, losses_dict):
         lr = self._optimizer.param_groups[self._best_param_group_id]["lr"]
         self._optimizer.zero_grad()
-        if isinstance(losses, dict):
-            losses = sum(loss.mean() for loss in losses.values())
-        elif torch.is_tensor(losses):
-            losses = losses.mean()
+        if isinstance(losses_dict, dict):
+            losses = sum(loss.mean() for loss in losses_dict.values())
+        elif torch.is_tensor(losses_dict):
+            losses = losses_dict.mean()
         else:
             raise Exception("Loss go wrong.")
         losses.backward()

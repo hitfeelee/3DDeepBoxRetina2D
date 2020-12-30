@@ -12,6 +12,7 @@ from postprocess.nms import *
 from postprocess.instance import *
 from Archs_2D.BBoxCoder import BBoxCoder
 import time
+from utils.ParamList import ParamList
 
 def permute_to_N_HWA_K(tensor, K):
     """
@@ -61,7 +62,7 @@ class RetinaNet(BackBone):
         self.focal_loss_gamma = configs.RETINANET.FOCAL_LOSS_GAMMA
         self.smooth_l1_loss_beta = configs.RETINANET.SMOOTH_L1_LOSS_BETA
         self.device = torch.device(configs.DEVICE if torch.cuda.is_available() else "cpu")
-        self.in_shape = configs.INTENSOR_SHAPE
+        self.in_size = configs.INTENSOR_SIZE
         # Inference parameters:
         self.score_threshold = configs.DETECTOR.SCORE_THRESH_TEST
         self.topk_candidates = configs.DETECTOR.TOPK_CANDIDATES_TEST
@@ -82,12 +83,12 @@ class RetinaNet(BackBone):
         self._bbox_coder = BBoxCoder(configs, od_feature_shapes)
         num_anchor = self.bbox_coder.num_anchor
         # ========subnet headers net for classification and regression======== #
-        self.classification_headers, self.regression_headers = self._build_subnet_header(num_anchor)
+        self.classification_headers, self.bbox_regress_headers = self._build_subnet_header(num_anchor)
         self.add_module('base_net', self.base_net)
         self.add_module('extras', self.extras)
         self.add_module('fpn', self.fpn)
         self.add_module('classification_headers', self.classification_headers)
-        self.add_module('regression_headers', self.regression_headers)
+        self.add_module('bbox_regress_headers', self.bbox_regress_headers)
 
     def forward(self, x: torch.Tensor,
                 gt_classes:torch.Tensor = None, gt_bboxes:torch.Tensor=None,
@@ -107,7 +108,7 @@ class RetinaNet(BackBone):
 
         for feature_key in self.configs.RETINANET.OD_FEATURES:
             confidences.append(self.classification_headers(self.features[feature_key]))
-            locations.append(self.regression_headers(self.features[feature_key]))
+            locations.append(self.bbox_regress_headers(self.features[feature_key]))
 
         if is_training:
             losses = self.losses(gt_classes, gt_bboxes, confidences, locations)
@@ -186,9 +187,9 @@ class RetinaNet(BackBone):
             regressions.append(nn.Conv2d(self.configs.RETINANET.OUT_CHANNELS, 4 * num_anchor,
                                                 3, stride=1, padding=1))
         classification_headers = nn.Sequential(*classifications)
-        regression_headers = nn.Sequential(*regressions)
+        bbox_regress_headers = nn.Sequential(*regressions)
 
-        return classification_headers, regression_headers
+        return classification_headers, bbox_regress_headers
     @property
     def OutShapeSpec(self):
         extra_shapes = OrderedDict()
@@ -316,10 +317,10 @@ class RetinaNet(BackBone):
         keep = batched_nms(boxes_all, scores_all, class_idxs_all, self.nms_threshold)
         keep = keep[: self.max_detections_per_image]
 
-        result = Instances(self.in_shape)
-        result.pred_boxes = BBoxes(boxes_all[keep])
-        result.scores = scores_all[keep]
-        result.pred_classes = class_idxs_all[keep]
+        result = ParamList(self.in_size, is_train=False)
+        result.add_field("class", class_idxs_all[keep])
+        result.add_field("score", scores_all[keep])
+        result.add_field("bbox", boxes_all[keep])
         return result
 
     def init_from_base_net(self, model):
@@ -327,7 +328,7 @@ class RetinaNet(BackBone):
         self.fpn.apply(_xavier_init_)
         self.extras.apply(_xavier_init_)
         self.classification_headers.apply(_header_init_)
-        self.regression_headers.apply(_header_init_)
+        self.bbox_regress_headers.apply(_header_init_)
         # Use prior in model initialization to improve stability
         self.classification_headers[-1].apply(self._classification_header_init_)
 
@@ -336,7 +337,7 @@ class RetinaNet(BackBone):
         self.fpn.apply(_xavier_init_)
         self.extras.apply(_xavier_init_)
         self.classification_headers.apply(_header_init_)
-        self.regression_headers.apply(_header_init_)
+        self.bbox_regress_headers.apply(_header_init_)
 
         # Use prior in model initialization to improve stability
         self.classification_headers[-1].apply(self._classification_header_init_)

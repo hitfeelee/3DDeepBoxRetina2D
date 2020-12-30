@@ -8,7 +8,7 @@ from Archs_3D.MultiBin import MultiBin
 from preprocess.data_preprocess_3d import TrainAugmentation
 from Archs_3D.configs.mobilev2_deepbox3d_configs import CONFIGS
 from datasets.distributed_sampler import *
-from postprocess.visualization import draw_bboxes_to_image
+from postprocess.visualization import cv_draw_bboxes_3d
 from datasets.dataset_utils import AspectRatioGroupedDataset
 import operator
 

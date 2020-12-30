@@ -3,13 +3,14 @@ from Archs_2D.DefaultPredictor import DefaultPredictor
 from Archs_2D.build_model import build_model
 import os
 import cv2
-from postprocess.visualization import draw_instance_to_image
+from postprocess.visualization import cv_draw_bboxes_2d
 import numpy as np
 from datasets.KittiDatasets import KittiDatasets
 
 from multiprocessing import Process, Pipe
 import time
 import argparse
+from preprocess.transforms import ToAbsoluteCoords
 
 def arg_parser():
     parser = argparse.ArgumentParser(description="Retina Demo")
@@ -25,6 +26,7 @@ class Demo2D(Process):
         model, backbone, cfg = build_model(self.model_name)
         self.predictor = DefaultPredictor(model, cfg)
         self.cfg = cfg
+        self.to_abs_coord = ToAbsoluteCoords()
 
     def run(self):
         #=====test images kitti dataset========#
@@ -45,7 +47,8 @@ class Demo2D(Process):
             outputs = predictor(img)
             end_time = time.time()
             print('detecting time %s per image' % (end_time - start_time))
-            draw_instance_to_image(src, outputs[0]['instances'], label_map=label_map)
+            src, outputs = self.to_abs_coord(src, targets=outputs)
+            cv_draw_bboxes_2d(src, outputs, label_map=label_map)
             cv2.imshow('DETECTOR RESULT', src)
             k = cv2.waitKey(1000)
             if (k & 0xff == ord('q')):
@@ -65,20 +68,12 @@ class Demo2D(Process):
                 shape = np.shape(frame)
                 frame = frame[int(shape[0] / 3.): shape[0], int(shape[1] / rx): int((rx - 1.) * shape[1] / rx)]
                 src = np.copy(frame)
-                shape = np.shape(frame)
-
                 start_time = time.time()
                 outputs = predictor(frame)
                 end_time = time.time()
-                # self.pipe.send({
-                #     'image': np.copy(src),
-                #     'instances': outputs[0]['instances']
-                # })
-                # self.pipe.send({
-                #     'image': 1
-                # })
                 print('detecting time %s per image' % (end_time - start_time))
-                draw_instance_to_image(src, outputs[0]['instances'], label_map=label_map)
+                src, outputs = self.to_abs_coord(src, targets=outputs)
+                cv_draw_bboxes_2d(src, outputs, label_map=label_map)
                 k = cv2.waitKey(10)
                 if (k & 0xff == ord('q')):
                     break

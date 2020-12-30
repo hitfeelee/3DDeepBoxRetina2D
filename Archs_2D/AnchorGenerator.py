@@ -181,10 +181,11 @@ class AnchorGenerator(object):
         self.feature_sizes = [self._calc_shapes(input_tensor_size, s) for s in self.strides]
         anchors_over_all_feature_maps = self.grid_anchors(self.feature_sizes)
         anchors_in_image = []
-        scale = 1./input_tensor_size[0]
+        scaleX = 1. / input_tensor_size[0]
+        scaleY = 1. / input_tensor_size[1]
         for anchors_per_feature_map in anchors_over_all_feature_maps:
             boxes = BBoxes(anchors_per_feature_map)
-            boxes.scale(scale, scale)
+            boxes.scale(scaleX, scaleY)
             anchors_in_image.append(boxes)
 
         return anchors_in_image
