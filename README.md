@@ -19,23 +19,23 @@ Please place it as following:
        |
        ---data
           |
-          ---testing
-          |
-          ---training
-             |
-             ---calib
-                |
-                ---calib_cam_to_cam.txt // camera calibration file for kitti
-             |
-             ---image_2
-             |
-             ---label_2
-             |
-             ---ImageSets
-                |
-                ---train.txt // list of training image.
-                |
-                ---test.txt // list of testing image.
+          ---kitti
+              ---testing
+              |
+              ---training
+                 ---ImageSets
+                     |
+                     ---train.txt // list of training image.
+                     |
+                     ---test.txt // list of testing image.
+                 |
+                 ---calib
+                    |
+                    ---calib_cam_to_cam.txt // camera calibration file for kitti
+                 |
+                 ---image_2
+                 |
+                 ---label_2
           
 
 ### training
